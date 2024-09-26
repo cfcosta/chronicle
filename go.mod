@@ -5,9 +5,10 @@ go 1.23.0
 toolchain go1.23.1
 
 require (
+	github.com/BurntSushi/toml v0.3.1
+	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/fiatjaf/eventstore v0.9.0
 	github.com/fiatjaf/khatru v0.8.1
-	github.com/joho/godotenv v1.5.1
 	github.com/nbd-wtf/go-nostr v0.36.3
 )
 

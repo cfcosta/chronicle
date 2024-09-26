@@ -1,3 +1,4 @@
 db/
 .env
 chronicle
+config.toml

@@ -1,64 +1,124 @@
 ![image](logo.png)
 
-Chronicle is a personal relay [Nostr](https://njump.me), built on the [Khatru](https://khatru.nostr.technology) framework, that stores complete conversations in which the owner has taken part and nothing else: pure signal.  
-This is possible since writing is limited to the threads in which the owner has partecipated (either as an original poster or with a reply/zap/reaction), and only to his trusted network (WoT), to protect against spam.
+Chronicle is a personal relay for [Nostr](https://njump.me), built on the [Khatru](https://khatru.nostr.technology) framework, that stores complete conversations in which the owners have taken part and nothing else: pure signal.  
+This is possible since writing is limited to the threads in which the owners have participated (either as original posters or with replies/zaps/reactions), and only to their trusted network (WoT), to protect against spam.
 
 Chronicle fits well in the Outbox model, so you can use it as your read/write relay, and it also automatically becomes a space-efficient backup relay.
 
 ## How it works
 
 Every incoming event is verified against some simple rules.  
-If it's signed by the relay owner, it is automatically accepted.  
-If it is posted by someone else it is checked if it is part of in a conversation in which the owner participated *and* if the author is in the owner's social graph (to the 2nd degree), then it is accepted, otherwise it is rejected.
+If it's signed by one of the relay owners, it is automatically accepted.  
+If it is posted by someone else, it is checked if it is part of a conversation in which an owner participated *and* if the author is in the owners' social graph (to the 2nd degree). If both conditions are met, it is accepted; otherwise, it is rejected.
 
-If an event published by the owner refers to a conversation that is not yet known by the relay, it tries to fetch it.
+If an event published by an owner refers to a conversation that is not yet known by the relay, it tries to fetch it.
 
 ## Features highlight
 
-It works nicely as inbox/outbox/dm relay.  
-It is a space-efficient backup relay.  
-It offers spam protection by WoT.  
-It permits to load old notes with a "fetch sync" option.
+- Works nicely as inbox/outbox/dm relay
+- Space-efficient backup relay
+- Offers spam protection by WoT
+- Permits loading old notes with a "fetch sync" option
+- Supports multiple relay owners
+- Uses systemd socket activation for improved deployment flexibility
+- Propagates events to backup relays
 
 ## Configure
 
-After cloning the repo create an `.env` file based on the example provided in the repository and personalize it:
+After cloning the repo, create a `config.toml` file based on the example provided in the repository and personalize it:
 
+```toml
+# Relay Information
+relay_name = "My Chronicle Relay"
+relay_description = "A personal Chronicle relay"
+relay_url = "wss://my-relay.example.com"
+relay_port = "8080"
+relay_contact = "operator@example.com"
+relay_icon = "https://example.com/icon.png"
 
-```bash
-# Your pubkey, in hex format
-OWNER_PUBKEY="xxxxxxxxxxxxxxxxxxxxxxxxxxx...xxx"
+# Owner Information
+owner_pubkeys = [
+  "pubkey1",
+  "pubkey2",
+  "pubkey3"
+]
 
-# Relay info, for NIP-11
-RELAY_NAME="YourRelayName"
-RELAY_DESCRIPTION="Your relay description"
-RELAY_URL="wss://chronicle.xxxxxxxx.com"
-RELAY_ICON="https://chronicle.xxxxxxxx.com/assets/icon.png"
-RELAY_CONTACT="your_email_or_website"
+# Database Configuration
+db_path = "./db"
 
-# The path you would like the database to be saved
-# The path can be relative to the binary, or absolute
-DB_PATH="db/"
+# Web of Trust Configuration
+refresh_interval = 24
+min_followers = 3
+fetch_sync = false
 
-# Interval in hours to refresh the web of trust
-REFRESH_INTERVAL=24
-
-# How many followers before they're allowed in the WoT
-MIN_FOLLOWERS=3
-
-# Periodically try fetch notes from other relays
-FETCH_SYNC="FALSE"
+# Backup Relays
+backup_relays = [
+  "wss://backup1.example.com",
+  "wss://backup2.example.com"
+]
 ```
 
-## Build
+## Build and Run
 
-Build it with `go install` or `go build`, then run it.
+Build it with `go install` or `go build`, then run it with:
 
-By default Chronicle use [Badger](https://github.com/dgraph-io/badger) as event storage since it makes easier to cross-compile.  
+```
+./chronicle --config-file=config.toml
+```
+
+By default, Chronicle uses [Badger](https://github.com/dgraph-io/badger) as event storage since it makes it easier to cross-compile.  
 You can also use [lmdb](https://www.symas.com/lmdb), compiling with:
 ```
 go build -tags=lmdb .
 ```
+
+## Systemd Socket Activation
+
+To use systemd socket activation:
+
+1. Create a systemd socket file (e.g., `/etc/systemd/system/chronicle.socket`):
+
+```
+[Unit]
+Description=Chronicle Nostr Relay Socket
+
+[Socket]
+ListenStream=8080
+
+[Install]
+WantedBy=sockets.target
+```
+
+2. Create a systemd service file (e.g., `/etc/systemd/system/chronicle.service`):
+
+```
+[Unit]
+Description=Chronicle Nostr Relay
+Requires=chronicle.socket
+
+[Service]
+ExecStart=/path/to/chronicle --config-file=/path/to/config.toml
+User=chronicle
+Group=chronicle
+
+[Install]
+WantedBy=multi-user.target
+```
+
+3. Enable and start the socket:
+
+```
+sudo systemctl enable chronicle.socket
+sudo systemctl start chronicle.socket
+```
+
+4. Start the service:
+
+```
+sudo systemctl start chronicle.service
+```
+
+The relay will now use systemd socket activation for improved deployment flexibility.
 
 ## Credits
 

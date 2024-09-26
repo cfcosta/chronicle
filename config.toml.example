@@ -1,0 +1,21 @@
+# Relay Information
+relay_name = "My Chronicle Relay"
+relay_description = "A personal Chronicle relay"
+relay_url = "wss://my-relay.example.com"
+relay_port = "8080"
+relay_contact = "operator@example.com"
+relay_icon = "https://example.com/icon.png"
+
+# Owner Information
+owner_pubkeys = ["pubkey1", "pubkey2", "pubkey3"]
+
+# Database Configuration
+db_path = "./db"
+
+# Web of Trust Configuration
+refresh_interval = 3
+min_followers = 1
+fetch_sync = true
+
+# Backup Relays
+backup_relays = ["wss://backup1.example.com", "wss://backup2.example.com"]
